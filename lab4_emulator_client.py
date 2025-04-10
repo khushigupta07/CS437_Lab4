@@ -46,6 +46,7 @@ class MQTTClient:
     # Puback callback
     def customPubackCallback(self, mid):
         #You don't need to write anything here
+        print("Callback")
         pass
 
     def publish(self, topic="vehicle/emission/data"):
@@ -60,7 +61,7 @@ class MQTTClient:
             self.client.publishAsync(topic, payload, 0, ackCallback=self.customPubackCallback)
 
             # Sleep to simulate real-time data publishing
-
+            time.sleep(10)
 
 print("Loading vehicle data...")
 data = []
