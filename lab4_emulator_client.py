@@ -8,7 +8,7 @@ import numpy as np
 #TODO 1: modify the following parameters
 #Starting and end index, modify this
 device_st = 0
-device_end = 1
+device_end = 5
 
 #Path to your certificates, modify this
 certificate_formatter = "certs/Vehicle_{}_certificate.pem.crt"
@@ -18,6 +18,9 @@ key_formatter = "certs/Vehicle_{}_private.pem.key"
 #Path to the dataset, modify this
 data_path = "data/vehicle{}.csv"
 
+
+def maxCO2Callback(client, userdata, message):
+    print(f"Max CO2 level from {message.topic} is {message.payload.decode()}")
 
 class MQTTClient:
     def __init__(self, device_id, cert, key):
@@ -33,14 +36,15 @@ class MQTTClient:
         self.client.configureConnectDisconnectTimeout(10)  # 10 sec
         self.client.configureMQTTOperationTimeout(5)  # 5 sec
         self.client.onMessage = self.customOnMessage
+        self.client.connect()
+        self.client.subscribe(topic=f"iot/Vehicle_{device_id}", QoS=1, callback=maxCO2Callback)
 
     def customOnMessage(self, message):
-        #TODO 3: fill in the function to show your received message
-        print("client {} received payload {} from topic {}".format(self.device_id, "undefined", "undefined"))
+        # print("client {} received payload {} from topic {}".format(self.device_id, "undefined", "undefined"))
+        pass
 
     # Suback callback
     def customSubackCallback(self, mid, data):
-        #You don't need to write anything here
         pass
 
     # Puback callback
@@ -52,16 +56,11 @@ class MQTTClient:
     def publish(self, topic="vehicle/emission/data"):
         # Load the vehicle's emission data
         df = pd.read_csv(data_path.format(self.device_id))
-        for index, row in df.iterrows():
-            # Create a JSON payload from the row data
-            payload = json.dumps(row.to_dict())
-
-            # Publish the payload to the specified topic
-            print(f"Publishing: {payload} to {topic}")
-            self.client.publishAsync(topic, payload, 0, ackCallback=self.customPubackCallback)
-
-            # Sleep to simulate real-time data publishing
-            time.sleep(10)
+        row = df.iloc[self.state]
+        payload = json.dumps(row.to_dict())
+        print(f"Publishing: {payload} to {topic}")
+        self.client.publishAsync(topic, payload, 0, ackCallback=self.customPubackCallback)
+        self.state += 1
 
 print("Loading vehicle data...")
 data = []
@@ -91,5 +90,3 @@ while True:
         exit()
     else:
         print("wrong key pressed")
-
-    time.sleep(3)
