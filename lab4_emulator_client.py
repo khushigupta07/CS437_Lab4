@@ -58,6 +58,7 @@ class MQTTClient:
         df = pd.read_csv(data_path.format(self.device_id))
         row = df.iloc[self.state]
         payload = json.dumps(row.to_dict())
+        # payload = payload + payload + payload  # 1800 bytes
         print(f"Publishing: {payload} to {topic}")
         self.client.publishAsync(topic, payload, 0, ackCallback=self.customPubackCallback)
         self.state += 1
@@ -90,3 +91,23 @@ while True:
         exit()
     else:
         print("wrong key pressed")
+
+
+# python3 aws-iot-device-sdk-python-v2/samples/basic_discovery.py --thing_name Vehicle_0 --topic 'vehicle/emission/data' --message '{"vehicle_CO2": 345.05, "vehicle_id": "veh0"}' --ca_file ./certs/AmazonRootCA1.pem --cert ./certs/Vehicle_0_certificate.pem.crt --key ./certs/Vehicle_0_private.pem.key --region us-east-2 --verbosity Warn
+# python3 aws-iot-device-sdk-python-v2/samples/basic_discovery.py --thing_name Vehicle_0 --topic 'vehicle/emission/data' --message '{"vehicle_CO2": 345.05, "vehicle_id": "veh0"}' --ca_file ./certs/greengrass-root-ca.pem --cert ./certs/Vehicle_0_certificate.pem.crt --key ./certs/Vehicle_0_private.pem.key --region us-east-2 --verbosity Warn
+#
+# mosquitto_pub -h 3.137.172.255 -p 8883 \
+# --cafile ./certs/AmazonRootCA1.pem \
+# --cert ./certs/Vehicle_0_certificate.pem.crt \
+# --key ./certs/Vehicle_0_private.pem.key \
+# -t "vehicle/emission/data" -m '{"vehicle_CO2": 345.05, "vehicle_id": "veh0"}'
+
+#
+# mosquitto_pub \
+#   -h 3.137.172.255 \
+#   -p 8883 \
+#   --cafile ./certs/greengrass-root-ca.pem \
+#   --cert ./certs/Vehicle_0_certificate.pem.crt \
+#   --key ./certs/Vehicle_0_private.pem.key \
+#   -t vehicle/emission/data \
+#   -m '{"vehicle_CO2": 123.45, "vehicle_id": "veh0"}'
